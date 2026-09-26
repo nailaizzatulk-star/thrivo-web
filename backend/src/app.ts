@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Root Route
 app.get('/', (req, res) => {
-  res.json({ message: 'Selamat Datang di Thrivo API' });
+  res.json({ message: 'Welcome to Thrivo API' });
 });
 
 // Mounting Routes
