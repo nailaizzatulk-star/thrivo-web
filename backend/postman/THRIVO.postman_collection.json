@@ -165,31 +165,31 @@
                 },
                 {
                   "key": "description",
-                  "value": "Warna beige, merek Ralph Lauren, size S dengan PB: 53 cm dan LD: 100 cm",
+                  "value": "Warna beige, merek Ralph Lauren, size S dengan PB: 53 cm dan LD: 100 cm - WA: 08123456789",
                   "type": "text",
                   "description": "Deskripsi pakaian"
                 },
                 {
                   "key": "category",
-                  "value": "90's",
+                  "value": "KNITWEAR",
                   "type": "text",
                   "description": "Kategori pakaian"
                 },
                 {
                   "key": "condition",
-                  "value": "Good",
+                  "value": "GOOD",
                   "type": "text",
                   "description": "Kondisi pakaian"
                 },
                 {
                   "key": "originalPrice",
-                  "value": "1300000",
+                  "value": "780000",
                   "type": "text",
                   "description": "Harga beli / harga asli pakaian"
                 },
                 {
                   "key": "sellingPrice",
-                  "value": "1495000",
+                  "value": "760000",
                   "type": "text",
                   "description": "Harga jual pakaian"
                 },
