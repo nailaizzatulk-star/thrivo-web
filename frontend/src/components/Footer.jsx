@@ -19,20 +19,6 @@ function Footer() {
             <a href="#">SHIRTS</a>
             <a href="#">BOTTOMS</a>
           </div>
-  
-          <div className="footer-column">
-            <h3>INFORMATION</h3>
-            <a href="#">ABOUT US</a>
-            <a href="#">CONTACT</a>
-            <a href="#">HOW IT WORKS</a>
-            <a href="#">SUSTAINABILITY</a>
-          </div>
-  
-          <div className="footer-column">
-            <h3>FOLLOW US</h3>
-            <a href="#">INSTAGRAM</a>
-            <a href="#">TIKTOK</a>
-          </div>
         </div>
   
         <div className="footer-bottom">

@@ -1,37 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db';
 import { items, users } from '../db/schema';
-import { eq, and, ilike, asc, desc } from 'drizzle-orm';
+import { eq, and, ilike, asc, desc, count } from 'drizzle-orm';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { verifyToken } from '../utils/jwt';
 import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary';
 import { ApiError } from '../utils/api.error';
 
-// Tambahkan file?: Express.Multer.File di bawah ini
-export interface AuthRequest extends Request {
-  user?: { id: number };
-  file?: Express.Multer.File;
-}
-
-export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next(new ApiError(401, 'Akses ditolak, token tidak ditemukan'));
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  try {
-    const decoded = verifyToken(token);
-    req.user = { id: decoded.id };
-    next();
-  } catch (error) {
-    return next(new ApiError(401, 'Token tidak valid atau telah kedaluwarsa'));
-  }
-};
-
-// 1. GET /api/items (Pencarian, Filter Dinamis, Sorting, Pagination)
+// 1. GET /api/items (Pencarian, Filter, Sorting, Pagination)
 export const getItems = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { q, category, sort, status, page = '1', limit = '10' } = req.query;
@@ -46,11 +22,13 @@ export const getItems = async (req: Request, res: Response, next: NextFunction) 
       conditions.push(ilike(items.title, `%${q}%`));
     }
     if (category) {
-      conditions.push(eq(items.category, category as string));
+      conditions.push(eq(items.category, category as any));
     }
     if (status) {
       conditions.push(eq(items.status, status as string));
     }
+
+    const whereClause = conditions.length ? and(...conditions) : undefined;
 
     let orderByClause = desc(items.createdAt);
     if (sort === 'price_asc') {
@@ -59,17 +37,30 @@ export const getItems = async (req: Request, res: Response, next: NextFunction) 
       orderByClause = desc(items.sellingPrice);
     }
 
+    // Ambil total data untuk keperluan meta pagination frontend
+    const [totalData] = await db
+      .select({ value: count() })
+      .from(items)
+      .where(whereClause);
+
+    const totalItems = totalData.value;
+    const totalPages = Math.ceil(totalItems / limitNum);
+
     const data = await db.select()
       .from(items)
-      .where(conditions.length ? and(...conditions) : undefined)
+      .where(whereClause)
       .orderBy(orderByClause)
       .limit(limitNum)
       .offset(offset);
 
     res.status(200).json({
       success: true,
-      page: pageNum,
-      limit: limitNum,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        totalItems,
+        totalPages,
+      },
       data,
     });
   } catch (error) {
@@ -81,10 +72,12 @@ export const getItems = async (req: Request, res: Response, next: NextFunction) 
 export const getItemById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) throw new ApiError(400, 'Invalid item ID format');
+
     const [item] = await db.select().from(items).where(eq(items.id, id));
 
     if (!item) {
-      throw new ApiError(404, 'Barang tidak ditemukan');
+      throw new ApiError(404, 'Item not found');
     }
 
     res.status(200).json({ success: true, data: item });
@@ -102,7 +95,7 @@ export const createItem = async (req: AuthRequest, res: Response, next: NextFunc
     const { title, description, category, originalPrice, sellingPrice, condition } = req.body;
 
     if (!req.file) {
-      throw new ApiError(400, 'Foto barang wajib diunggah');
+      throw new ApiError(400, 'Item image is required');
     }
 
     // Upload buffer ke Cloudinary
@@ -123,7 +116,7 @@ export const createItem = async (req: AuthRequest, res: Response, next: NextFunc
 
     res.status(201).json({
       success: true,
-      message: 'Barang berhasil diunggah',
+      message: 'Item created successfully',
       data: newItem,
     });
   } catch (error) {
@@ -136,17 +129,22 @@ export const updateItem = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const userId = req.user?.id;
     const itemId = parseInt(req.params.id as string, 10);
+    
+    if (isNaN(itemId)) throw new ApiError(400, 'Invalid item ID format');
+    if (!userId) throw new ApiError(401, 'Unauthorized');
 
     const [existingItem] = await db.select().from(items).where(eq(items.id, itemId));
-    if (!existingItem) throw new ApiError(404, 'Barang tidak ditemukan');
-    if (existingItem.userId !== userId) throw new ApiError(403, 'Anda tidak berhak mengedit barang ini');
+    if (!existingItem) throw new ApiError(404, 'Item not found');
+    if (existingItem.userId !== userId) throw new ApiError(403, 'You are not authorized to edit this item');
 
     let imageUrl = existingItem.imageUrl;
     let imagePublicId = existingItem.imagePublicId;
 
     // Jika mengunggah gambar baru
     if (req.file) {
-      await deleteFromCloudinary(existingItem.imagePublicId);
+      if (existingItem.imagePublicId) {
+        await deleteFromCloudinary(existingItem.imagePublicId);
+      }
       const cloudResult = await uploadToCloudinary(req.file.buffer);
       imageUrl = cloudResult.url;
       imagePublicId = cloudResult.public_id;
@@ -172,7 +170,7 @@ export const updateItem = async (req: AuthRequest, res: Response, next: NextFunc
 
     res.status(200).json({
       success: true,
-      message: 'Barang berhasil diperbarui',
+      message: 'Item updated successfully',
       data: updatedItem,
     });
   } catch (error) {
@@ -185,20 +183,25 @@ export const deleteItem = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const userId = req.user?.id;
     const itemId = parseInt(req.params.id as string, 10);
+    
+    if (isNaN(itemId)) throw new ApiError(400, 'Invalid item ID format');
+    if (!userId) throw new ApiError(401, 'Unauthorized');
 
     const [existingItem] = await db.select().from(items).where(eq(items.id, itemId));
-    if (!existingItem) throw new ApiError(404, 'Barang tidak ditemukan');
-    if (existingItem.userId !== userId) throw new ApiError(403, 'Anda tidak berhak menghapus barang ini');
+    if (!existingItem) throw new ApiError(404, 'Item not found');
+    if (existingItem.userId !== userId) throw new ApiError(403, 'You are not authorized to delete this item');
 
-    // Hapus dari Cloudinary
-    await deleteFromCloudinary(existingItem.imagePublicId);
+    // Hapus dari Cloudinary jika ID ada
+    if (existingItem.imagePublicId) {
+      await deleteFromCloudinary(existingItem.imagePublicId);
+    }
 
     // Hapus dari Database
     await db.delete(items).where(eq(items.id, itemId));
 
     res.status(200).json({
       success: true,
-      message: 'Barang dan foto berhasil dihapus',
+      message: 'Item and image deleted successfully',
     });
   } catch (error) {
     next(error);
@@ -228,9 +231,12 @@ export const toggleItemStatus = async (req: AuthRequest, res: Response, next: Ne
     const userId = req.user?.id;
     const itemId = parseInt(req.params.id as string, 10);
 
+    if (isNaN(itemId)) throw new ApiError(400, 'Invalid item ID format');
+    if (!userId) throw new ApiError(401, 'Unauthorized');
+
     const [existingItem] = await db.select().from(items).where(eq(items.id, itemId));
-    if (!existingItem) throw new ApiError(404, 'Barang tidak ditemukan');
-    if (existingItem.userId !== userId) throw new ApiError(403, 'Akses ditolak');
+    if (!existingItem) throw new ApiError(404, 'Item not found');
+    if (existingItem.userId !== userId) throw new ApiError(403, 'Access denied');
 
     const newStatus = existingItem.status === 'Available' ? 'Sold' : 'Available';
 
@@ -241,7 +247,7 @@ export const toggleItemStatus = async (req: AuthRequest, res: Response, next: Ne
 
     res.status(200).json({
       success: true,
-      message: `Status berhasil diubah menjadi ${newStatus}`,
+      message: `Status successfully updated to ${newStatus}`,
       data: updatedItem,
     });
   } catch (error) {

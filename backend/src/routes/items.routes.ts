@@ -16,7 +16,7 @@ const router = Router();
 // Public Routes
 router.get('/', getItems);
 
-// Protected Routes Khusus User (Taruh /me sebelum /:id agar tidak terbaca sebagai param ID)
+// Protected Routes Khusus User 
 router.get('/me', authenticateJWT, getUserItems);
 router.get('/:id', getItemById);
 

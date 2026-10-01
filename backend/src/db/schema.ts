@@ -1,5 +1,23 @@
-import { pgTable, serial, text, integer, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, timestamp, varchar, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
+// Enum Kategori
+export const categoryEnum = pgEnum('category_type', [
+  'OUTERWEAR',
+  'KNITWEAR',
+  'SHIRTS',
+  'BOTTOMS',
+  'JACKET'
+]);
+
+// Enum Kondisi Produk
+export const conditionEnum = pgEnum('condition_type', [
+  'NEW',
+  'LIKE NEW',
+  'VERY GOOD',
+  'GOOD',
+  'FAIR'
+]);
 
 // Tabel Users
 export const users = pgTable('users', {
@@ -16,18 +34,19 @@ export const items = pgTable('items', {
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   description: text('description').notNull(),
-  category: varchar('category', { length: 50 }).notNull(), // '90s', 'Y2K', 'Retro', dll.
-  originalPrice: integer('original_price').notNull(), // Harga beli asli
-  sellingPrice: integer('selling_price').notNull(),   // Harga jual thrift
-  condition: varchar('condition', { length: 50 }).notNull(), // 'Like New', 'Good', 'Fair'
+  category: categoryEnum('category').notNull(), 
+  originalPrice: integer('original_price').notNull(),
+  sellingPrice: integer('selling_price').notNull(),   
+  
+  condition: conditionEnum('condition').notNull(), 
+  
   imageUrl: text('image_url').notNull(),
-  imagePublicId: text('image_public_id').notNull(), // Untuk menghapus dari Cloudinary
-  status: varchar('status', { length: 20 }).default('Available').notNull(), // 'Available' | 'Sold'
+  imagePublicId: text('image_public_id').notNull(),
+  status: varchar('status', { length: 20 }).default('Available').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Relasi antara User dan Items
 export const usersRelations = relations(users, ({ many }) => ({
   items: many(items),
 }));

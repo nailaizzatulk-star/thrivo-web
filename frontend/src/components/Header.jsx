@@ -1,15 +1,23 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
+  const navigate = useNavigate()
+
+  // Ambil data user dari localStorage
+  const userStr = localStorage.getItem('user')
+  const user = userStr ? JSON.parse(userStr) : null
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    alert('Logged out successfully')
+    navigate('/login')
+  }
 
   return (
     <>
-      <div className="announcement-bar">
-        FREE SHIPPING ON ORDERS OVER Rp300.000
-      </div>
-
       <header className="header">
         <Link to="/" className="logo">
           THRIVO
@@ -22,7 +30,18 @@ function Header() {
         </nav>
 
         <div className="header-actions">
-          <Link to="/login">LOGIN</Link>
+          {/* Jika user sudah login tampilkan LOGOUT, jika belum tampilkan LOGIN */}
+          {user ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="logout-btn"
+            >
+              LOGOUT
+            </button>
+          ) : (
+            <Link to="/login">LOGIN</Link>
+          )}
 
           <button
             type="button"
@@ -30,8 +49,6 @@ function Header() {
           >
             SEARCH
           </button>
-
-          <Link to="/cart">CART</Link>
         </div>
       </header>
 
