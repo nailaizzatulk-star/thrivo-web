@@ -1,0 +1,85 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f1e8;
+  color: #1f1f1f;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+.newsletter {
+  padding: 100px 50px;
+  background-color: #1f1f1f;
+  color: #f5f1e8;
+}
+
+.newsletter-content {
+  max-width: 750px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.newsletter-content .section-label {
+  margin-bottom: 20px;
+}
+
+.newsletter-content h2 {
+  margin-bottom: 25px;
+  font-size: 48px;
+  line-height: 1;
+  letter-spacing: -1.5px;
+  font-weight: 500;
+}
+
+.newsletter-content p:not(.section-label) {
+  margin-bottom: 35px;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.newsletter-form {
+  display: flex;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.newsletter-form input {
+  flex: 1;
+  padding: 15px 18px;
+  border: 1px solid #f5f1e8;
+  background-color: transparent;
+  color: #f5f1e8;
+  font-size: 11px;
+  letter-spacing: 1px;
+  outline: none;
+}
+
+.newsletter-form input::placeholder {
+  color: #f5f1e8;
+}
+
+.newsletter-form button {
+  padding: 15px 25px;
+  border: 1px solid #f5f1e8;
+  background-color: #f5f1e8;
+  color: #1f1f1f;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+}
+
+.newsletter-form button:hover {
+  opacity: 0.8;
+}
