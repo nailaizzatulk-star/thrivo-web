@@ -31,12 +31,10 @@ app.use('/api/items', itemsRoutes);
 // Error Middleware Terpusat
 app.use(errorHandler);
 
-// Support Serverless Deployment (Vercel) & Local Server
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server is running in http://localhost:${PORT}`);
-  });
-}
+// Support Serverless Deployment & Local Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
 export default app;

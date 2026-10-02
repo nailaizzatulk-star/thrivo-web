@@ -75,6 +75,35 @@ function Profile() {
     }
   }
 
+  // Fungsi untuk menghapus item via API DELETE
+  const handleDeleteItem = async (itemId) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this piece from your archive?')
+    if (!confirmDelete) return
+
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/items/${itemId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Gagal menghapus barang')
+      }
+
+      // Hapus item dari state lokal agar langsung hilang dari tampilan
+      setItems((prevItems) => prevItems.filter((item) => item.id !== itemId))
+    } catch (error) {
+      console.error('Error deleting item:', error)
+      alert(error.message || 'Terjadi kesalahan saat menghapus barang')
+    }
+  }
+
   const listedCount = items.length
   const soldCount = items.filter((item) => item.status && item.status.toUpperCase() === 'SOLD').length
 
@@ -130,7 +159,6 @@ function Profile() {
             ) : items.length > 0 ? (
               <div className="product-grid" style={{ marginTop: '20px' }}>
                 {items.map((item) => (
-               
                   <div key={item.id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <ProductCard
                       id={item.id}
@@ -140,22 +168,43 @@ function Profile() {
                       imageUrl={item.imageUrl || item.image || item.image_url}
                     />
                     
-                    {/* Tombol Toggle Status */}
-                    <button
-                      onClick={() => handleToggleStatus(item.id, item.status)}
-                      style={{
-                        padding: '10px',
-                        backgroundColor: item.status === 'Available' ? '#111' : '#e0e0e0',
-                        color: item.status === 'Available' ? '#fff' : '#555',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '0.8rem',
-                        transition: '0.3s'
-                      }}
-                    >
-                      {item.status === 'Available' ? 'MARK AS SOLD' : 'MARK AS AVAILABLE'}
-                    </button>
+                    {/* Container Tombol Aksi */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {/* Tombol Toggle Status */}
+                      <button
+                        onClick={() => handleToggleStatus(item.id, item.status)}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          backgroundColor: item.status === 'Available' ? '#111' : '#e0e0e0',
+                          color: item.status === 'Available' ? '#fff' : '#555',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '0.8rem',
+                          transition: '0.3s'
+                        }}
+                      >
+                        {item.status === 'Available' ? 'MARK AS SOLD' : 'MARK AS AVAILABLE'}
+                      </button>
+
+                      {/* Tombol Delete */}
+                      <button
+                        onClick={() => handleDeleteItem(item.id)}
+                        style={{
+                          padding: '10px 14px',
+                          backgroundColor: '#fff',
+                          color: '#d9534f',
+                          border: '1px solid #d9534f',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '0.8rem',
+                          transition: '0.3s'
+                        }}
+                      >
+                        DELETE
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

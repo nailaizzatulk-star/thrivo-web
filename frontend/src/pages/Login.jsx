@@ -42,7 +42,6 @@ function Login() {
       if (data.token) localStorage.setItem('token', data.token)
       if (data.user) localStorage.setItem('user', JSON.stringify(data.user))
 
-      alert('Login successful!')
       navigate('/') // Redirect to home page
     } catch (err) {
       setError(err.message)

@@ -2,12 +2,17 @@ import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 function Catalog() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [sortBy, setSortBy] = useState('DEFAULT');
+  
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const searchQuery = searchParams.get('search');
 
   useEffect(() => {
     fetch('http://localhost:5000/api/items')
@@ -24,10 +29,18 @@ function Catalog() {
       });
   }, []);
 
-  // Filter Kategori
+  // Filter gabungan: Kategori & Search
   const filteredItems = items.filter((item) => {
-    if (selectedCategory === 'ALL') return true;
-    return item.category?.toUpperCase() === selectedCategory;
+    // 1. Cek kecocokan kategori
+    const matchCategory = selectedCategory === 'ALL' || item.category?.toUpperCase() === selectedCategory;
+    
+    // 2. Cek kecocokan keyword pencarian (jika ada)
+    const matchSearch = searchQuery 
+      ? item.title?.toLowerCase().includes(searchQuery.toLowerCase()) 
+      : true;
+
+    // Harus lolos dua-duanya
+    return matchCategory && matchSearch;
   });
 
   // Sorting Harga
@@ -37,6 +50,11 @@ function Catalog() {
     return 0;
   });
 
+  // Fungsi untuk hapus query pencarian dari URL
+  const clearSearch = () => {
+    navigate('/catalog');
+  };
+
   return (
     <>
       <Header />
@@ -44,6 +62,27 @@ function Catalog() {
         <div className="catalog-header" style={{ marginBottom: '30px', textAlign: 'center' }}>
           <p style={{ letterSpacing: '2px', color: '#666', fontSize: '0.85rem' }}>ARCHIVE COLLECTION</p>
           <h2>ALL PIECES</h2>
+          
+          {/* Indikator Pencarian Aktif */}
+          {searchQuery && (
+            <div style={{ marginTop: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              <p style={{ margin: 0, fontStyle: 'italic' }}>
+                Showing results for: <strong>"{searchQuery}"</strong>
+              </p>
+              <button 
+                onClick={clearSearch}
+                style={{
+                  padding: '4px 10px',
+                  backgroundColor: '#eee',
+                  border: '1px solid #ccc',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem'
+                }}
+              >
+                CLEAR
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="catalog-controls" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
@@ -83,10 +122,9 @@ function Catalog() {
           <div style={{ textAlign: 'center', padding: '50px' }}>Loading archive items...</div>
         ) : sortedItems.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '50px', color: '#666' }}>
-            No items found in this category.
+            No items found matching your criteria.
           </div>
         ) : (
- 
           <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '25px' }}>
             {sortedItems.map((item) => (
               <ProductCard
