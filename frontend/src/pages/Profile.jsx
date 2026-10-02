@@ -38,8 +38,45 @@ function Profile() {
       .finally(() => setLoading(false))
   }, [navigate])
 
+  // Fungsi untuk update status barang via API PATCH
+  const handleToggleStatus = async (itemId, currentStatus) => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    // Tentukan status baru kebalikan dari status saat ini
+    const newStatus = currentStatus === 'Available' ? 'Sold' : 'Available'
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/items/${itemId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: newStatus
+        })
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Gagal mengubah status barang')
+      }
+
+      // Update state item secara lokal biar UI langsung berubah tanpa refresh
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId ? { ...item, status: newStatus } : item
+        )
+      )
+    } catch (error) {
+      console.error('Error updating status:', error)
+      alert(error.message || 'Terjadi kesalahan saat mengubah status')
+    }
+  }
+
   const listedCount = items.length
-  const soldCount = items.filter((item) => item.status === 'SOLD').length
+  const soldCount = items.filter((item) => item.status && item.status.toUpperCase() === 'SOLD').length
 
   return (
     <>
@@ -93,14 +130,33 @@ function Profile() {
             ) : items.length > 0 ? (
               <div className="product-grid" style={{ marginTop: '20px' }}>
                 {items.map((item) => (
-                  <ProductCard
-                    key={item.id}
-                    id={item.id}
-                    category={item.category}
-                    name={item.title || item.name}
-                    price={`Rp${item.sellingPrice ? item.sellingPrice.toLocaleString('id-ID') : '0'}`}
-                    imageUrl={item.imageUrl || item.image || item.image_url}
-                  />
+               
+                  <div key={item.id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <ProductCard
+                      id={item.id}
+                      category={item.category}
+                      name={item.title || item.name}
+                      price={`Rp${item.sellingPrice ? item.sellingPrice.toLocaleString('id-ID') : '0'}`}
+                      imageUrl={item.imageUrl || item.image || item.image_url}
+                    />
+                    
+                    {/* Tombol Toggle Status */}
+                    <button
+                      onClick={() => handleToggleStatus(item.id, item.status)}
+                      style={{
+                        padding: '10px',
+                        backgroundColor: item.status === 'Available' ? '#111' : '#e0e0e0',
+                        color: item.status === 'Available' ? '#fff' : '#555',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '0.8rem',
+                        transition: '0.3s'
+                      }}
+                    >
+                      {item.status === 'Available' ? 'MARK AS SOLD' : 'MARK AS AVAILABLE'}
+                    </button>
+                  </div>
                 ))}
               </div>
             ) : (
