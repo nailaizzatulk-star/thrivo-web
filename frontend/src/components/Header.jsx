@@ -36,10 +36,11 @@ function Header() {
         </Link>
 
         <nav className="navigation">
+          <Link to="/">HOME</Link>
           <Link to="/catalog">SHOP</Link>
           <Link to="/sell">SELL</Link>
           <Link to="/profile">ACCOUNT</Link>
-        </nav>
+          </nav>
 
         <div className="header-actions">
           {user ? (
