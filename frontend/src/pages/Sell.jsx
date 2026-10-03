@@ -64,7 +64,7 @@ function Sell() {
       data.append('sellingPrice', formData.sellingPrice)
       data.append('condition', formData.condition)
 
-      const response = await fetch('http://localhost:5000/api/items', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

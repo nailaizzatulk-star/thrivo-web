@@ -23,7 +23,7 @@ function Profile() {
     }
 
     // Fetch daftar item milik user yang sedang login
-    fetch('http://localhost:5000/api/items/me', {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -47,7 +47,7 @@ function Profile() {
     const newStatus = currentStatus === 'Available' ? 'Sold' : 'Available'
 
     try {
-      const response = await fetch(`http://localhost:5000/api/items/${itemId}/status`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items/${itemId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ function Profile() {
     if (!token) return
 
     try {
-      const response = await fetch(`http://localhost:5000/api/items/${itemId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items/${itemId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

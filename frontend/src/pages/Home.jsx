@@ -10,11 +10,17 @@ function Home() {
 
   // Ambil data dari Backend untuk Featured Pieces
   useEffect(() => {
-    fetch('http://localhost:5000/api/items')
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items`)
       .then(res => res.json())
       .then(data => {
-        // Ambil 4 produk terbaru saja untuk ditampilkan di Home
-        setFeaturedItems(data.slice(0, 4))
+        useEffect(() => {
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items`)
+            .then(res => res.json())
+            .then(result => {
+              setFeaturedItems(result.data.slice(0, 4))
+            })
+            .catch(err => console.error("Gagal ambil data featured items:", err))
+        }, [])
       })
       .catch(err => console.error("Gagal ambil data featured items:", err))
   }, [])

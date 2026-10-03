@@ -8,7 +8,7 @@ function ProductDetail() {
   const [product, setProduct] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/items/${id}`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items/${id}`)
       .then((res) => res.json())
       .then((data) => {
         // Ekstrak data jika terbungkus dalam { data: ... } atau { item: ... }

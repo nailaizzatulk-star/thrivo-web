@@ -15,7 +15,7 @@ function Catalog() {
   const searchQuery = searchParams.get('search');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/items')
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items`)
       .then((res) => res.json())
       .then((data) => {
         // Memastikan data yang diterima berbentuk array
