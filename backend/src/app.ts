@@ -11,7 +11,7 @@ const app: Application = express();
 
 // Middleware Konfigurasi CORS
 app.use(cors({
-  origin: process.env.CLIENT_URL || '*',
+  origin: process.env.CLIENT_URL || true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true,
 }));
@@ -31,10 +31,12 @@ app.use('/api/items', itemsRoutes);
 // Error Middleware Terpusat
 app.use(errorHandler);
 
-// Support Serverless Deployment & Local Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Hanya jalankan app.listen di environment Lokal 
+if (process.env.VERCEL !== '1') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server is running locally on port ${PORT}`);
+  });
+}
 
 export default app;
